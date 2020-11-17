@@ -64,10 +64,10 @@ public class FileDownloadServiceProxy implements IFileDownloadServiceProxy {
                          int callbackProgressTimes,
                          int callbackProgressMinIntervalMillis,
                          int autoRetryTimes, boolean forceReDownload, FileDownloadHeader header,
-                         boolean isWifiRequired) {
+                         boolean isWifiRequired, double maxLimitSpeed) {
         return handler.start(url, path, pathAsDirectory, callbackProgressTimes,
                 callbackProgressMinIntervalMillis, autoRetryTimes, forceReDownload, header,
-                isWifiRequired);
+                isWifiRequired, maxLimitSpeed);
     }
 
     @Override

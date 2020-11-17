@@ -43,6 +43,7 @@ public class DownloadTask implements BaseDownloadTask, BaseDownloadTask.IRunning
 
     private final String mUrl;
     private String mPath;
+    private double maxLimitSpeed;
     private String mFilename;
     private boolean mPathAsDirectory;
 
@@ -111,6 +112,16 @@ public class DownloadTask implements BaseDownloadTask, BaseDownloadTask.IRunning
             this.mFilename = new File(path).getName();
         }
 
+        return this;
+    }
+
+    @Override
+    public BaseDownloadTask setMaxLimitSpeed(double maxLimitSpeed) {
+        this.maxLimitSpeed = maxLimitSpeed;
+
+        if (FileDownloadLog.NEED_LOG) {
+            FileDownloadLog.d(this, "setMaxLimitSpeed %s", maxLimitSpeed);
+        }
         return this;
     }
 
@@ -388,6 +399,11 @@ public class DownloadTask implements BaseDownloadTask, BaseDownloadTask.IRunning
     @Override
     public String getPath() {
         return mPath;
+    }
+
+    @Override
+    public double getMaxLimitSpeed() {
+        return maxLimitSpeed;
     }
 
     @Override

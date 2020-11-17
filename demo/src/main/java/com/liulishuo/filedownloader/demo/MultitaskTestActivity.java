@@ -230,7 +230,7 @@ public class MultitaskTestActivity extends AppCompatActivity {
 
         final List<BaseDownloadTask> tasks = new ArrayList<>();
         for (int i = 0; i < count; i++) {
-            tasks.add(FileDownloader.getImpl().create(Constant.URLS[i]).setTag(i + 1));
+            tasks.add(FileDownloader.getImpl().create(Constant.URLS[i]).setTag(i + 1).setMaxLimitSpeed(50));
         }
         queueSet.disableCallbackProgressTimes(); // do not want each task's download progress's callback,
         // we just consider which task will completed.

@@ -56,18 +56,18 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * steps:
  * <p/>
  * step 1. create the trial connection
- *          ( this trial connection is used for:
- *                  1. checkup the saved etag is overdue
- *                  2. checkup whether the partial-accept is supported
- *                  3. checkup whether the current connection is chunked. )
- *
+ * ( this trial connection is used for:
+ * 1. checkup the saved etag is overdue
+ * 2. checkup whether the partial-accept is supported
+ * 3. checkup whether the current connection is chunked. )
+ * <p>
  * step 2. if the saved etag is overdue -> jump to step 1 to checkup whether the partial-accept is
  * supported.
  * step 3. if (NOT chunked) & partial-accept & output stream support-seek:
- *              create multiple {@link DownloadTask} to download.
- *         else:
- *              create single first connection and use {@link FetchDataTask} to fetch data from the
- *              connection.
+ * create multiple {@link DownloadTask} to download.
+ * else:
+ * create single first connection and use {@link FetchDataTask} to fetch data from the
+ * connection.
  * <p/>
  * We use {@link DownloadStatusCallback} to handle all events sync to DB/filesystem and callback to
  * user.
@@ -87,6 +87,7 @@ public class DownloadLaunchRunnable implements Runnable, ProcessCallback {
     private boolean isTriedFixRangeNotSatisfiable;
 
     int validRetryTimes;
+    private final double maxLimitSpeed;
 
     /**
      * None of the ranges in the request's Range header field overlap the current extent of the
@@ -123,7 +124,7 @@ public class DownloadLaunchRunnable implements Runnable, ProcessCallback {
                                    IThreadPoolMonitor threadPoolMonitor,
                                    final int minIntervalMillis, int callbackProgressMaxCount,
                                    boolean isForceReDownload, boolean isWifiRequired,
-                                   int maxRetryTimes) {
+                                   int maxRetryTimes, double maxLimitSpeed) {
         this.alive = new AtomicBoolean(true);
         this.paused = false;
         this.isTriedFixRangeNotSatisfiable = false;
@@ -136,6 +137,7 @@ public class DownloadLaunchRunnable implements Runnable, ProcessCallback {
         this.supportSeek = CustomComponentHolder.getImpl().isSupportSeek();
         this.threadPoolMonitor = threadPoolMonitor;
         this.validRetryTimes = maxRetryTimes;
+        this.maxLimitSpeed = maxLimitSpeed;
 
         this.statusCallback = new DownloadStatusCallback(model,
                 maxRetryTimes, minIntervalMillis, callbackProgressMaxCount);
@@ -146,7 +148,7 @@ public class DownloadLaunchRunnable implements Runnable, ProcessCallback {
                                    IThreadPoolMonitor threadPoolMonitor,
                                    final int minIntervalMillis, int callbackProgressMaxCount,
                                    boolean isForceReDownload, boolean isWifiRequired,
-                                   int maxRetryTimes) {
+                                   int maxRetryTimes, double maxLimitSpeed) {
         this.alive = new AtomicBoolean(true);
         this.paused = false;
         this.isTriedFixRangeNotSatisfiable = false;
@@ -159,6 +161,7 @@ public class DownloadLaunchRunnable implements Runnable, ProcessCallback {
         this.supportSeek = CustomComponentHolder.getImpl().isSupportSeek();
         this.threadPoolMonitor = threadPoolMonitor;
         this.validRetryTimes = maxRetryTimes;
+        this.maxLimitSpeed = maxLimitSpeed;
 
         this.statusCallback = callback;
     }
@@ -172,7 +175,7 @@ public class DownloadLaunchRunnable implements Runnable, ProcessCallback {
                                                 int maxRetryTimes) {
         return new DownloadLaunchRunnable(callback, model, header, threadPoolMonitor,
                 minIntervalMillis, callbackProgressMaxCount, isForceReDownload, isWifiRequired,
-                maxRetryTimes);
+                maxRetryTimes, 0);
     }
 
     public void pause() {
@@ -716,6 +719,7 @@ public class DownloadLaunchRunnable implements Runnable, ProcessCallback {
                     .setWifiRequired(isWifiRequired)
                     .setConnectionModel(connectionProfile)
                     .setPath(path)
+                    .setMaxLimitSpeed(maxLimitSpeed / connectionModelList.size())
                     .build();
 
             if (FileDownloadLog.NEED_LOG) {
@@ -1016,6 +1020,7 @@ public class DownloadLaunchRunnable implements Runnable, ProcessCallback {
         private Boolean isForceReDownload;
         private Boolean isWifiRequired;
         private Integer maxRetryTimes;
+        private Double maxLimitSpeed;
 
         public Builder setModel(FileDownloadModel model) {
             this.model = model;
@@ -1057,17 +1062,22 @@ public class DownloadLaunchRunnable implements Runnable, ProcessCallback {
             return this;
         }
 
+        public Builder setMaxLimitSpeed(Double maxLimitSpeed) {
+            this.maxLimitSpeed = maxLimitSpeed;
+            return this;
+        }
+
         public DownloadLaunchRunnable build() {
             if (model == null || threadPoolMonitor == null
                     || minIntervalMillis == null || callbackProgressMaxCount == null
                     || isForceReDownload == null || isWifiRequired == null
-                    || maxRetryTimes == null) {
+                    || maxRetryTimes == null || maxLimitSpeed == null) {
                 throw new IllegalArgumentException();
             }
 
             return new DownloadLaunchRunnable(model, header, threadPoolMonitor,
                     minIntervalMillis, callbackProgressMaxCount,
-                    isForceReDownload, isWifiRequired, maxRetryTimes);
+                    isForceReDownload, isWifiRequired, maxRetryTimes, maxLimitSpeed);
         }
     }
 }

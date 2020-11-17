@@ -64,6 +64,12 @@ public interface BaseDownloadTask {
     BaseDownloadTask setPath(final String path, final boolean pathAsDirectory);
 
     /**
+     * @param maxLimitSpeed the max value of speed is limited
+     * @return
+     */
+    BaseDownloadTask setMaxLimitSpeed(double maxLimitSpeed);
+
+    /**
      * @param listener For callback download status(pending,connected,progress,
      *                 blockComplete,retry,error,paused,completed,warn)
      */
@@ -363,6 +369,11 @@ public interface BaseDownloadTask {
      * {@code path} is the absolute path of the target file.
      */
     String getPath();
+
+    /**
+     * @return the max value of speed is limited
+     */
+    double getMaxLimitSpeed();
 
     /**
      * @return Whether the result of {@link #getPath()} is a directory.

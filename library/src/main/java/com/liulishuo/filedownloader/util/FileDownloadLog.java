@@ -26,7 +26,7 @@ import android.util.Log;
  */
 public class FileDownloadLog {
 
-    public static boolean NEED_LOG = false;
+    public static boolean NEED_LOG = true;
 
     private static final String TAG = "FileDownloader.";
 

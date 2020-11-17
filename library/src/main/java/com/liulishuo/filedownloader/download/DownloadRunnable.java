@@ -40,6 +40,7 @@ public class DownloadRunnable implements Runnable {
     private final ConnectTask connectTask;
     private final ProcessCallback callback;
     private final String path;
+    private final double maxLimitSpeed;
     private final boolean isWifiRequired;
 
     private FetchDataTask fetchDataTask;
@@ -49,12 +50,13 @@ public class DownloadRunnable implements Runnable {
     final int connectionIndex;
 
     private DownloadRunnable(int id, int connectionIndex, ConnectTask connectTask,
-                             ProcessCallback callback, boolean isWifiRequired, String path) {
+                             ProcessCallback callback, boolean isWifiRequired, String path, double maxLimitSpeed) {
         this.downloadId = id;
         this.connectionIndex = connectionIndex;
         this.paused = false;
         this.callback = callback;
         this.path = path;
+        this.maxLimitSpeed = maxLimitSpeed;
         this.connectTask = connectTask;
         this.isWifiRequired = isWifiRequired;
     }
@@ -116,6 +118,7 @@ public class DownloadRunnable implements Runnable {
                         .setConnection(connection)
                         .setConnectionProfile(this.connectTask.getProfile())
                         .setPath(path)
+                        .setMaxLimitSpeed(maxLimitSpeed)
                         .build();
 
                 fetchDataTask.run();
@@ -178,6 +181,7 @@ public class DownloadRunnable implements Runnable {
         private String path;
         private Boolean isWifiRequired;
         private Integer connectionIndex;
+        private Double maxLimitSpeed;
 
 
         public Builder setCallback(ProcessCallback callback) {
@@ -215,6 +219,11 @@ public class DownloadRunnable implements Runnable {
             return this;
         }
 
+        public Builder setMaxLimitSpeed(double maxLimitSpeed) {
+            this.maxLimitSpeed = maxLimitSpeed;
+            return this;
+        }
+
         public Builder setWifiRequired(boolean wifiRequired) {
             isWifiRequired = wifiRequired;
             return this;
@@ -227,19 +236,19 @@ public class DownloadRunnable implements Runnable {
 
         public DownloadRunnable build() {
             if (callback == null || path == null || isWifiRequired == null
-                    || connectionIndex == null) {
+                    || connectionIndex == null|| maxLimitSpeed == null) {
                 throw new IllegalArgumentException(FileDownloadUtils.formatString("%s %s %B",
                         callback, path, isWifiRequired));
             }
 
             final ConnectTask connectTask = connectTaskBuilder.build();
             return new DownloadRunnable(connectTask.downloadId, connectionIndex, connectTask,
-                    callback, isWifiRequired, path);
+                    callback, isWifiRequired, path, maxLimitSpeed);
         }
 
         DownloadRunnable buildForTest(ConnectTask connectTask) {
             return new DownloadRunnable(connectTask.downloadId, 0, connectTask,
-                    callback, false, "");
+                    callback, false, "", 0);
         }
 
     }

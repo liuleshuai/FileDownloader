@@ -17,6 +17,7 @@
 package com.liulishuo.filedownloader.download;
 
 import android.os.SystemClock;
+import android.util.Log;
 
 import com.liulishuo.filedownloader.connection.FileDownloadConnection;
 import com.liulishuo.filedownloader.exception.FileDownloadGiveUpRetryException;
@@ -49,6 +50,7 @@ public class FetchDataTask {
     private final long endOffset;
     private final long contentLength;
     private final String path;
+    private final double maxLimitSpeed;
 
     long currentOffset;
     private FileDownloadOutputStream outputStream;
@@ -61,9 +63,10 @@ public class FetchDataTask {
 
     private FetchDataTask(FileDownloadConnection connection, ConnectionProfile connectionProfile,
                           DownloadRunnable host, int id, int connectionIndex,
-                          boolean isWifiRequired, ProcessCallback callback, String path) {
+                          boolean isWifiRequired, ProcessCallback callback, String path, double maxLimitSpeed) {
         this.callback = callback;
         this.path = path;
+        this.maxLimitSpeed = maxLimitSpeed;
         this.connection = connection;
         this.isWifiRequired = isWifiRequired;
         this.hostRunnable = host;
@@ -135,7 +138,11 @@ public class FetchDataTask {
 
             byte[] buff = new byte[BUFFER_SIZE];
 
-            if (paused) return;
+            if (paused) {
+                return;
+            }
+            long lastReceiveData = currentOffset;
+            long lastReceiveTime = System.currentTimeMillis();
 
             do {
                 int byteCount = inputStream.read(buff);
@@ -146,6 +153,22 @@ public class FetchDataTask {
                 outputStream.write(buff, 0, byteCount);
 
                 currentOffset += byteCount;
+                //限制速度
+                if (maxLimitSpeed > 0 && currentOffset - lastReceiveData > maxLimitSpeed * 1024) {
+                    long receiveInterval = System.currentTimeMillis() - lastReceiveTime;
+                    if (receiveInterval < 1000) {
+                        try {
+                            if (FileDownloadLog.NEED_LOG) {
+                                FileDownloadLog.w(this, "LKL" + maxLimitSpeed + " " + (1000 - receiveInterval));
+                            }
+                            Thread.sleep(1000 - receiveInterval);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    lastReceiveData = currentOffset;
+                    lastReceiveTime = System.currentTimeMillis();
+                }
 
                 // callback progress
                 callback.onProgress(byteCount);
@@ -256,6 +279,7 @@ public class FetchDataTask {
         ConnectionProfile connectionProfile;
         ProcessCallback callback;
         String path;
+        Double maxLimitSpeed;
         Boolean isWifiRequired;
         Integer connectionIndex;
         Integer downloadId;
@@ -277,6 +301,11 @@ public class FetchDataTask {
 
         public Builder setPath(String path) {
             this.path = path;
+            return this;
+        }
+
+        public Builder setMaxLimitSpeed(double maxLimitSpeed) {
+            this.maxLimitSpeed = maxLimitSpeed;
             return this;
         }
 
@@ -303,13 +332,13 @@ public class FetchDataTask {
         public FetchDataTask build() throws IllegalArgumentException {
             if (isWifiRequired == null || connection == null || connectionProfile == null
                     || callback == null || path == null || downloadId == null
-                    || connectionIndex == null) {
+                    || connectionIndex == null || maxLimitSpeed == null) {
                 throw new IllegalArgumentException();
             }
 
             return new FetchDataTask(connection, connectionProfile, downloadRunnable,
                     downloadId, connectionIndex,
-                    isWifiRequired, callback, path);
+                    isWifiRequired, callback, path, maxLimitSpeed);
         }
 
     }

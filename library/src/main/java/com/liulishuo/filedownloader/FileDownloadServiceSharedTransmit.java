@@ -53,14 +53,14 @@ class FileDownloadServiceSharedTransmit implements
                          int callbackProgressTimes,
                          int callbackProgressMinIntervalMillis,
                          int autoRetryTimes, boolean forceReDownload, FileDownloadHeader header,
-                         boolean isWifiRequired) {
+                         boolean isWifiRequired, double maxLimitSpeed) {
         if (!isConnected()) {
             return DownloadServiceNotConnectedHelper.start(url, path, pathAsDirectory);
         }
 
         handler.start(url, path, pathAsDirectory, callbackProgressTimes,
                 callbackProgressMinIntervalMillis,
-                autoRetryTimes, forceReDownload, header, isWifiRequired);
+                autoRetryTimes, forceReDownload, header, isWifiRequired, maxLimitSpeed);
         return true;
     }
 
@@ -153,7 +153,7 @@ class FileDownloadServiceSharedTransmit implements
         if (runServiceForeground) {
             if (FileDownloadLog.NEED_LOG) FileDownloadLog.d(this, "start foreground service");
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) context.startForegroundService(i);
-        } else  {
+        } else {
             context.startService(i);
         }
     }

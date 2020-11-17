@@ -187,6 +187,7 @@ public class SingleTaskTestActivity extends AppCompatActivity {
                 .setCallbackProgressTimes(300)
                 .setMinIntervalUpdateSpeed(400)
                 .setTag(tag)
+                .setMaxLimitSpeed(500)
                 .setListener(new FileDownloadSampleListener() {
 
                     @Override
