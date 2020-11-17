@@ -1,6 +1,9 @@
 # FileDownloader
 Android multi-task file download engine.
 
+2020.11.17
+新增限速功能（限速只是广义上的限速，并不能保证时刻都是在限定范围内）
+参考文档：https://juejin.im/post/6844903875795795975
 
 [![Download][bintray_svg]][bintray_url]
 ![][file_downloader_svg]
