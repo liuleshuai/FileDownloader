@@ -601,6 +601,7 @@ public class DownloadLaunchRunnable implements Runnable, ProcessCallback {
                 .setWifiRequired(isWifiRequired)
                 .setConnectionModel(profile)
                 .setPath(model.getTempFilePath())
+                .setMaxLimitSpeed(maxLimitSpeed)
                 .build();
 
         model.setConnectionCount(1);
@@ -1072,7 +1073,7 @@ public class DownloadLaunchRunnable implements Runnable, ProcessCallback {
                     || minIntervalMillis == null || callbackProgressMaxCount == null
                     || isForceReDownload == null || isWifiRequired == null
                     || maxRetryTimes == null || maxLimitSpeed == null) {
-                throw new IllegalArgumentException();
+                throw new IllegalArgumentException("download arguments is error!");
             }
 
             return new DownloadLaunchRunnable(model, header, threadPoolMonitor,
